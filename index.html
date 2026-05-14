@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>MelodyRank — 음악 평가 & 랭킹</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/tabler-icons.min.css" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0a0a0f;
+  --bg2:#12121a;
+  --bg3:#1a1a25;
+  --bg4:#22223a;
+  --border:#2a2a40;
+  --border2:#3a3a55;
+  --text:#f0f0f8;
+  --text2:#9898b8;
+  --text3:#5a5a7a;
+  --amber:#f5a623;
+  --amber2:#ffc857;
+  --amber-dim:#3a2800;
+  --gold-grad:linear-gradient(135deg,#f5a623,#ffd166);
+  --radius:10px;
+  --radius-lg:16px;
+  --sans:'DM Sans',sans-serif;
+  --serif:'Playfair Display',serif;
+  --mono:'DM Mono',monospace;
+}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);}
+body{padding:0;}
+
+/* ── NOISE OVERLAY ─────────────────────────────────── */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity:.4;z-index:0;}
+
+/* ── HEADER ────────────────────────────────────────── */
+header{position:sticky;top:0;z-index:100;background:rgba(10,10,15,.9);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);padding:0 2rem;}
+.header-inner{max-width:900px;margin:0 auto;height:60px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:baseline;gap:10px;}
+.logo-name{font-family:var(--serif);font-size:22px;font-weight:600;
+  background:var(--gold-grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.logo-sub{font-size:11px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;}
+.header-nav{display:flex;gap:4px;}
+.nav-btn{padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;
+  background:transparent;border:1px solid transparent;color:var(--text2);transition:all .15s;}
+.nav-btn:hover{color:var(--text);border-color:var(--border2);}
+.nav-btn.active{background:var(--bg3);color:var(--text);border-color:var(--border2);}
+
+/* ── MAIN LAYOUT ───────────────────────────────────── */
+main{max-width:900px;margin:0 auto;padding:2rem 2rem 4rem;position:relative;z-index:1;}
+.section{display:none;animation:fadeIn .2s ease;}
+.section.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ── CARDS ─────────────────────────────────────────── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1.25rem;}
+.card-title{font-size:11px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:1rem;display:flex;align-items:center;gap:6px;}
+.card-title i{font-size:14px;}
+
+/* ── FORM ELEMENTS ─────────────────────────────────── */
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.field-row.single{grid-template-columns:1fr;}
+.field-group label{display:block;font-size:11px;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px;}
+input[type=text]{width:100%;height:40px;padding:0 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--sans);font-size:14px;outline:none;transition:border-color .15s;}
+input[type=text]:focus{border-color:var(--border2);}
+input[type=text]::placeholder{color:var(--text3);}
+
+/* ── YOUTUBE FRAME ─────────────────────────────────── */
+.yt-wrap{width:100%;aspect-ratio:16/9;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1.25rem;}
+.yt-wrap iframe{width:100%;height:100%;border:none;}
+.yt-placeholder{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--text3);}
+.yt-placeholder i{font-size:40px;color:var(--border2);}
+.yt-placeholder span{font-size:13px;}
+
+/* ── CRITERIA GRID ─────────────────────────────────── */
+.criteria-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.criterion{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:14px;}
+.crit-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.crit-name{font-size:14px;font-weight:500;color:var(--text);display:flex;align-items:center;gap:6px;}
+.crit-name i{font-size:15px;color:var(--amber);}
+.crit-score{font-family:var(--mono);font-size:20px;font-weight:500;color:var(--amber2);}
+.crit-desc{font-size:11px;color:var(--text3);margin-bottom:10px;}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:2px;background:var(--border2);outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--amber);cursor:pointer;box-shadow:0 0 0 3px rgba(245,166,35,.15);}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--amber);cursor:pointer;border:none;}
+
+/* ── AVERAGE DISPLAY ───────────────────────────────── */
+.avg-bar{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem 1.5rem;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;}
+.avg-left .label{font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;}
+.avg-left .sub{font-size:11px;color:var(--text3);margin-top:2px;}
+.avg-right{display:flex;align-items:center;gap:16px;}
+.stars{display:flex;gap:3px;font-size:22px;}
+.s-full{color:var(--amber);}
+.s-half{color:var(--amber);opacity:.5;}
+.s-empty{color:var(--border2);}
+.avg-num-big{font-family:var(--mono);font-size:28px;font-weight:500;color:var(--text);}
+.avg-denom{font-size:13px;color:var(--text3);}
+
+/* ── BUTTONS ───────────────────────────────────────── */
+.btn-row{display:flex;gap:10px;}
+.btn-primary{flex:1;height:44px;border:none;border-radius:var(--radius);font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;
+  background:var(--gold-grad);color:#1a0f00;transition:opacity .15s;}
+.btn-primary:hover{opacity:.88;}
+.btn-secondary{height:44px;padding:0 20px;background:transparent;border:1px solid var(--border2);border-radius:var(--radius);font-family:var(--sans);font-size:14px;color:var(--text2);cursor:pointer;transition:all .15s;}
+.btn-secondary:hover{background:var(--bg3);color:var(--text);}
+
+/* ── RANK SECTION ──────────────────────────────────── */
+.sort-bar{display:flex;gap:6px;align-items:center;margin-bottom:1rem;flex-wrap:wrap;}
+.sort-label{font-size:12px;color:var(--text3);margin-right:4px;}
+.sort-btn{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;background:transparent;border:1px solid var(--border);color:var(--text3);transition:all .15s;font-family:var(--sans);}
+.sort-btn:hover{border-color:var(--border2);color:var(--text2);}
+.sort-btn.active{background:var(--amber-dim);color:var(--amber2);border-color:var(--amber);}
+.rank-header{display:grid;grid-template-columns:40px 1fr 90px 90px 90px;gap:10px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);margin-bottom:6px;}
+.rh{font-size:10px;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;}
+.rank-row{display:grid;grid-template-columns:40px 1fr 90px 90px 90px;gap:10px;align-items:center;padding:13px 14px;border-radius:var(--radius);cursor:pointer;transition:background .12s;border:1px solid transparent;}
+.rank-row:hover{background:var(--bg2);}
+.rank-row.active{background:var(--bg2);border-color:var(--border2);}
+.rank-n{font-family:var(--mono);font-size:15px;color:var(--text3);text-align:center;}
+.rank-n.gold{color:var(--amber2);font-weight:500;}
+.rank-n.silver{color:#c0c0d0;}
+.rank-n.bronze{color:#cd7f32;}
+.rank-song{font-size:14px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rank-artist{font-size:12px;color:var(--text3);}
+.genre-pill{display:inline-block;padding:2px 9px;border-radius:20px;background:var(--amber-dim);color:var(--amber);font-size:11px;font-weight:500;}
+.rank-score-cell{text-align:center;}
+.rank-score-n{font-family:var(--mono);font-size:16px;font-weight:500;color:var(--text);}
+.rank-score-d{font-size:10px;color:var(--text3);}
+.rank-stars-cell{display:flex;gap:2px;justify-content:center;font-size:14px;}
+.rank-stars-cell .s-full{color:var(--amber);}
+.rank-stars-cell .s-half{color:var(--amber);opacity:.5;}
+.rank-stars-cell .s-empty{color:var(--border);}
+
+/* ── DETAIL PANEL ──────────────────────────────────── */
+.detail-panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-top:.75rem;}
+.detail-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;}
+.detail-title{font-family:var(--serif);font-size:20px;font-weight:500;color:var(--text);}
+.detail-artist{font-size:13px;color:var(--text3);margin-top:3px;}
+.detail-score-big{font-family:var(--mono);font-size:32px;font-weight:500;background:var(--gold-grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.detail-yt{width:100%;aspect-ratio:16/9;border-radius:var(--radius);overflow:hidden;margin-bottom:1rem;}
+.detail-yt iframe{width:100%;height:100%;border:none;}
+.breakdown{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.bd-item{background:var(--bg3);border-radius:var(--radius);padding:10px 12px;display:flex;justify-content:space-between;align-items:center;}
+.bd-name{font-size:13px;color:var(--text2);}
+.bd-val{font-family:var(--mono);font-size:15px;font-weight:500;color:var(--amber2);}
+.bd-bar-wrap{height:3px;background:var(--border);border-radius:2px;margin-top:6px;}
+.bd-bar{height:3px;border-radius:2px;background:var(--gold-grad);}
+
+/* ── EMPTY STATE ───────────────────────────────────── */
+.empty{text-align:center;padding:4rem 1rem;color:var(--text3);}
+.empty i{font-size:48px;margin-bottom:1rem;display:block;opacity:.4;}
+.empty p{font-size:14px;line-height:1.7;}
+
+/* ── TOAST ─────────────────────────────────────────── */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
+  background:var(--bg3);border:1px solid var(--border2);color:var(--text);
+  padding:10px 20px;border-radius:24px;font-size:13px;z-index:999;
+  opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+
+/* ── RESPONSIVE ────────────────────────────────────── */
+@media(max-width:600px){
+  main{padding:1rem 1rem 3rem;}
+  .criteria-grid{grid-template-columns:1fr;}
+  .rank-header,.rank-row{grid-template-columns:32px 1fr 70px 70px;}
+  .rh:last-child,.rank-stars-cell{display:none;}
+  .field-row{grid-template-columns:1fr;}
+  .breakdown{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <span class="logo-name">🎵 MelodyRank</span>
+      <span class="logo-sub">음악 평가 & 랭킹</span>
+    </div>
+    <nav class="header-nav">
+      <button class="nav-btn active" onclick="switchTab('rate')" id="nav-rate">🎚️ 평가하기</button>
+      <button class="nav-btn" onclick="switchTab('rank')" id="nav-rank">🏆 랭킹</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<!-- ════ 평가하기 ════ -->
+<div class="section active" id="section-rate">
+
+  <div class="card">
+    <div class="card-title"><i class="ti ti-brand-youtube" aria-hidden="true"></i>유튜브 링크 & 곡 정보</div>
+    <div class="field-row single">
+      <div class="field-group">
+        <label>유튜브 링크</label>
+        <input type="text" id="yt-url" placeholder="https://www.youtube.com/watch?v=..." oninput="onUrlInput(this.value)"/>
+      </div>
+    </div>
+    <div class="yt-wrap" id="yt-frame">
+      <div class="yt-placeholder">
+        <i class="ti ti-player-play" aria-hidden="true"></i>
+        <span>유튜브 링크를 입력하면 미리보기가 표시됩니다</span>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field-group">
+        <label>곡 제목</label>
+        <input type="text" id="song-title" placeholder="곡 제목을 입력하세요"/>
+      </div>
+      <div class="field-group">
+        <label>아티스트</label>
+        <input type="text" id="song-artist" placeholder="아티스트명"/>
+      </div>
+    </div>
+    <div class="field-row single">
+      <div class="field-group">
+        <label>장르</label>
+        <input type="text" id="song-genre" placeholder="K-Pop, Rock, Jazz, R&amp;B, 클래식, 힙합 …"/>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="ti ti-adjustments-horizontal" aria-hidden="true"></i>항목별 평가 <span style="font-weight:400;font-size:10px;margin-left:4px">(각 항목 0 ~ 10점, 소수점 2자리)</span></div>
+    <div class="criteria-grid" id="criteria-grid"></div>
+  </div>
+
+  <div class="avg-bar">
+    <div class="avg-left">
+      <div class="label">종합 평균</div>
+      <div class="sub">5개 항목 가중 평균</div>
+    </div>
+    <div class="avg-right">
+      <div class="stars" id="avg-stars"></div>
+      <div>
+        <span class="avg-num-big" id="avg-num">5.00</span>
+        <span class="avg-denom"> / 10</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-secondary" onclick="resetForm()">초기화</button>
+    <button class="btn-primary" onclick="submitRating()">✓ 평가 등록하기</button>
+  </div>
+</div>
+
+<!-- ════ 랭킹 ════ -->
+<div class="section" id="section-rank">
+  <div class="sort-bar">
+    <span class="sort-label">정렬 기준</span>
+    <button class="sort-btn active" onclick="setSort('avg')" id="sort-avg">종합점수</button>
+    <button class="sort-btn" onclick="setSort('play')" id="sort-play">연주력</button>
+    <button class="sort-btn" onclick="setSort('vocal')" id="sort-vocal">보컬</button>
+    <button class="sort-btn" onclick="setSort('mood')" id="sort-mood">분위기</button>
+    <button class="sort-btn" onclick="setSort('genre')" id="sort-genre">장르성</button>
+    <button class="sort-btn" onclick="setSort('originality')" id="sort-originality">독창성</button>
+  </div>
+  <div class="rank-header">
+    <div class="rh" style="text-align:center">#</div>
+    <div class="rh">곡 / 아티스트</div>
+    <div class="rh" style="text-align:center">장르</div>
+    <div class="rh" style="text-align:center">점수</div>
+    <div class="rh" style="text-align:center">별점</div>
+  </div>
+  <div id="rank-list"></div>
+  <div id="rank-detail"></div>
+</div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CRITERIA=[
+  {key:'play',      name:'연주력',  desc:'악기·편곡·기술 완성도',    icon:'ti-guitar-pick'},
+  {key:'vocal',     name:'보컬',    desc:'음정·감정·음색·발음',        icon:'ti-microphone'},
+  {key:'mood',      name:'분위기',  desc:'감성·몰입감·무드 전달',      icon:'ti-wave-sine'},
+  {key:'genre',     name:'장르성',  desc:'장르 정체성과 표현력',       icon:'ti-music'},
+  {key:'originality',name:'독창성', desc:'창의성·신선함·차별화',       icon:'ti-sparkles'},
+];
+
+let scores={play:5,vocal:5,mood:5,genre:5,originality:5};
+let sortKey='avg';
+let selectedId=null;
+
+function loadRatings(){
+  try{return JSON.parse(localStorage.getItem('melodyrank')||'[]');}catch{return[];}
+}
+function saveRatings(r){
+  localStorage.setItem('melodyrank',JSON.stringify(r));
+}
+
+function extractId(url){
+  if(!url)return null;
+  const m=url.match(/(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{11})/);
+  return m?m[1]:null;
+}
+
+function onUrlInput(url){
+  const id=extractId(url);
+  const f=document.getElementById('yt-frame');
+  if(id){
+    f.innerHTML=`<iframe src="https://www.youtube.com/embed/${id}" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>`;
+  }else{
+    f.innerHTML=`<div class="yt-placeholder"><i class="ti ti-player-play" aria-hidden="true"></i><span>유튜브 링크를 입력하면 미리보기가 표시됩니다</span></div>`;
+  }
+}
+
+function renderStars(avg10,cls1='s-full',cls2='s-half',cls3='s-empty'){
+  const v=avg10/2;
+  return [1,2,3,4,5].map(i=>{
+    if(v>=i)return`<span class="${cls1}">★</span>`;
+    if(v>=i-.5)return`<span class="${cls2}">★</span>`;
+    return`<span class="${cls3}">★</span>`;
+  }).join('');
+}
+
+function buildGrid(){
+  document.getElementById('criteria-grid').innerHTML=CRITERIA.map(c=>`
+    <div class="criterion">
+      <div class="crit-head">
+        <span class="crit-name"><i class="ti ${c.icon}" aria-hidden="true"></i>${c.name}</span>
+        <span class="crit-score" id="sc-${c.key}">${scores[c.key].toFixed(2)}</span>
+      </div>
+      <div class="crit-desc">${c.desc}</div>
+      <input type="range" min="0" max="10" step="0.01" value="${scores[c.key]}"
+        oninput="updateScore('${c.key}',parseFloat(this.value))"/>
+    </div>
+  `).join('');
+}
+
+function updateScore(k,v){
+  scores[k]=v;
+  document.getElementById('sc-'+k).textContent=v.toFixed(2);
+  updateAvg();
+}
+
+function avg(){return CRITERIA.reduce((s,c)=>s+scores[c.key],0)/CRITERIA.length;}
+
+function updateAvg(){
+  const a=avg();
+  document.getElementById('avg-num').textContent=a.toFixed(2);
+  document.getElementById('avg-stars').innerHTML=renderStars(a);
+}
+
+function resetForm(){
+  scores={play:5,vocal:5,mood:5,genre:5,originality:5};
+  ['yt-url','song-title','song-artist','song-genre'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('yt-frame').innerHTML=`<div class="yt-placeholder"><i class="ti ti-player-play" aria-hidden="true"></i><span>유튜브 링크를 입력하면 미리보기가 표시됩니다</span></div>`;
+  buildGrid();updateAvg();
+}
+
+function submitRating(){
+  const url=document.getElementById('yt-url').value.trim();
+  const title=document.getElementById('song-title').value.trim();
+  const artist=document.getElementById('song-artist').value.trim();
+  const genre=document.getElementById('song-genre').value.trim();
+  if(!url||!title||!artist){toast('⚠️ 유튜브 링크, 제목, 아티스트를 입력해 주세요.');return;}
+  if(!extractId(url)){toast('⚠️ 올바른 유튜브 링크를 입력해 주세요.');return;}
+  const ratings=loadRatings();
+  ratings.push({id:Date.now(),url,title,artist,genre:genre||'기타',scores:{...scores},avg:avg(),date:new Date().toLocaleDateString('ko-KR')});
+  saveRatings(ratings);
+  toast('✅ 평가가 등록되었습니다!');
+  resetForm();
+  switchTab('rank');
+}
+
+function setSort(k){
+  sortKey=k;
+  document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sort-'+k).classList.add('active');
+  renderRank();
+}
+
+function renderRank(){
+  const ratings=loadRatings();
+  const list=document.getElementById('rank-list');
+  if(!ratings.length){
+    list.innerHTML=`<div class="empty"><i class="ti ti-music-off" aria-hidden="true"></i><p>아직 등록된 음악이 없습니다.<br>첫 번째 음악을 평가해 보세요!</p></div>`;
+    document.getElementById('rank-detail').innerHTML='';
+    return;
+  }
+  const sorted=[...ratings].sort((a,b)=>{
+    const va=sortKey==='avg'?a.avg:a.scores[sortKey];
+    const vb=sortKey==='avg'?b.avg:b.scores[sortKey];
+    return vb-va;
+  });
+  const rankClass=(i)=>i===0?'gold':i===1?'silver':i===2?'bronze':'';
+  list.innerHTML=sorted.map((r,i)=>`
+    <div class="rank-row${selectedId===r.id?' active':''}" onclick="selectRow(${r.id})">
+      <div class="rank-n ${rankClass(i)}">${i+1}</div>
+      <div>
+        <div class="rank-song">${r.title}</div>
+        <div class="rank-artist">${r.artist}</div>
+      </div>
+      <div style="text-align:center"><span class="genre-pill">${r.genre}</span></div>
+      <div class="rank-score-cell">
+        <div class="rank-score-n">${r.avg.toFixed(2)}</div>
+        <div class="rank-score-d">/ 10</div>
+      </div>
+      <div class="rank-stars-cell">${renderStars(r.avg,'s-full','s-half','s-empty')}</div>
+    </div>
+  `).join('');
+  if(selectedId){
+    const found=ratings.find(r=>r.id===selectedId);
+    if(found)renderDetail(found);
+  }
+}
+
+function selectRow(id){
+  if(selectedId===id){selectedId=null;document.getElementById('rank-detail').innerHTML='';renderRank();return;}
+  selectedId=id;
+  const r=loadRatings().find(r=>r.id===id);
+  if(r){renderDetail(r);renderRank();}
+}
+
+function renderDetail(r){
+  const vid=extractId(r.url);
+  document.getElementById('rank-detail').innerHTML=`
+    <div class="detail-panel">
+      <div class="detail-head">
+        <div>
+          <div class="detail-title">${r.title}</div>
+          <div class="detail-artist">${r.artist} · <span class="genre-pill">${r.genre}</span></div>
+        </div>
+        <div style="text-align:right">
+          <div class="detail-score-big">${r.avg.toFixed(2)}</div>
+          <div class="rank-stars-cell" style="justify-content:flex-end;margin-top:4px">${renderStars(r.avg,'s-full','s-half','s-empty')}</div>
+        </div>
+      </div>
+      ${vid?`<div class="detail-yt"><iframe src="https://www.youtube.com/embed/${vid}" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe></div>`:''}
+      <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">항목별 세부 점수</div>
+      <div class="breakdown">
+        ${CRITERIA.map(c=>`
+          <div class="bd-item">
+            <div>
+              <div class="bd-name"><i class="ti ${c.icon}" style="font-size:13px;vertical-align:-2px;margin-right:4px" aria-hidden="true"></i>${c.name}</div>
+              <div class="bd-bar-wrap"><div class="bd-bar" style="width:${r.scores[c.key]*10}%"></div></div>
+            </div>
+            <div class="bd-val">${r.scores[c.key].toFixed(2)}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:12px">등록일: ${r.date}</div>
+    </div>
+  `;
+}
+
+function switchTab(t){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('section-'+t).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('nav-'+t).classList.add('active');
+  if(t==='rank'){selectedId=null;renderRank();}
+}
+
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+buildGrid();updateAvg();
+</script>
+</body>
+</html>
