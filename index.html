@@ -151,9 +151,9 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 .sort-btn{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;background:transparent;border:1px solid var(--border);color:var(--text2);transition:all .15s;font-family:var(--sans);}
 .sort-btn:hover{border-color:var(--border2);color:var(--text);}
 .sort-btn.active{background:var(--amber-dim);color:var(--amber2);border-color:var(--amber);}
-.rank-header{display:grid;grid-template-columns:40px 1fr 90px 90px 90px;gap:10px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);margin-bottom:6px;}
+.rank-header{display:grid;grid-template-columns:40px 1fr 90px 90px;gap:10px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);margin-bottom:6px;}
 .rh{font-size:11px;color:var(--text2);letter-spacing:.6px;text-transform:uppercase;font-weight:600;}
-.rank-row{display:grid;grid-template-columns:40px 1fr 90px 90px 90px;gap:10px;align-items:center;padding:14px;border-radius:var(--radius);cursor:pointer;transition:background .12s;border:1px solid transparent;}
+.rank-row{display:grid;grid-template-columns:40px 1fr 90px 90px;gap:10px;align-items:center;padding:14px;border-radius:var(--radius);cursor:pointer;transition:background .12s;border:1px solid transparent;}
 .rank-row:hover{background:var(--bg2);}
 .rank-row.active{background:var(--bg2);border-color:var(--border2);}
 .rank-n{font-family:var(--mono);font-size:15px;color:var(--text3);text-align:center;}
@@ -194,8 +194,22 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
   main{padding:1rem 1rem 4rem;}
   #search-input{font-size:14px;height:46px;}
   #search-input::placeholder{font-size:12px;}
-  .btn-search{height:46px;padding:0 14px;font-size:13px;}
-  .btn-search .btn-label{display:none;}
+  
+  /* 모바일 검색 버튼 디자인 변경 (노란 배경 제거, 아이콘만 표시) */
+  .btn-search {
+    width: 46px;
+    height: 46px;
+    padding: 0;
+    background: transparent; 
+    border: none;
+    color: var(--amber); /* 돋보기 색상을 노란색으로 */
+    justify-content: center;
+  }
+  .btn-search i {
+    font-size: 24px; /* 아이콘 크기 키움 */
+  }
+  .btn-search .btn-label { display: none; }
+  
   .field-row{grid-template-columns:1fr;}
   .card{padding:1rem;}
   input[type=text]{height:46px;font-size:15px;}
@@ -207,7 +221,7 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
   .btn-primary{height:50px;font-size:15px;}
   .btn-secondary{height:50px;font-size:14px;}
   .sort-btn{padding:5px 11px;font-size:12px;}
-  .rank-header,.rank-row{grid-template-columns:32px 1fr 68px 68px;}
+  .rank-header,.rank-row{grid-template-columns:32px 1fr 68px;}
   .rh:last-child,.rank-stars-cell{display:none;}
   .rank-song{font-size:14px;}
   .rank-artist{font-size:12px;}
@@ -238,7 +252,7 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
   <div class="search-row">
     <div class="search-input-wrap">
       <i class="ti ti-search"></i>
-      <input type="text" id="search-input" placeholder="아티스트, 곡명으로 검색하세요 (예: 아이유 밤편지, BTS Dynamite)…"
+      <input type="text" id="search-input" placeholder="아티스트, 곡명으로 검색 (예: 아이유 밤편지, BTS Dynamite)…"
         onkeydown="if(event.key==='Enter')doSearch()"/>
     </div>
     <button class="btn-search" id="search-btn" onclick="doSearch()">
@@ -266,9 +280,6 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
       <div class="field-row">
         <div class="field-group"><label>곡 제목</label><input type="text" id="song-title" placeholder="곡 제목"/></div>
         <div class="field-group"><label>아티스트</label><input type="text" id="song-artist" placeholder="아티스트명"/></div>
-      </div>
-      <div class="field-row single">
-        <div class="field-group"><label>장르</label><input type="text" id="song-genre" placeholder="K-Pop, Rock, Jazz, R&B, 클래식, 힙합 …"/></div>
       </div>
     </div>
 
@@ -310,7 +321,6 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
   <div class="rank-header">
     <div class="rh" style="text-align:center">#</div>
     <div class="rh">곡 / 아티스트</div>
-    <div class="rh" style="text-align:center">장르</div>
     <div class="rh" style="text-align:center">점수</div>
     <div class="rh" style="text-align:center">별점</div>
   </div>
@@ -323,7 +333,6 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 <div class="toast" id="toast"></div>
 
 <script>
-// 유튜브 URL에 추가할 공통 파라미터 생성 함수
 function getYtParams() {
   const o = (window.location.origin && window.location.origin !== 'null') ? window.location.origin : 'https://localhost';
   const w = window.location.href;
@@ -344,7 +353,6 @@ let selectedRankId=null;
 const loadRatings=()=>{try{return JSON.parse(localStorage.getItem('melodyrank')||'[]')}catch{return[]}};
 const saveRatings=r=>localStorage.setItem('melodyrank',JSON.stringify(r));
 
-/* SEARCH - 유튜브 Data API v3로 변경된 부분 */
 async function doSearch(){
   const q=document.getElementById('search-input').value.trim();
   if(!q){toast('⚠️ 검색어를 입력해 주세요.');return;}
@@ -353,16 +361,8 @@ async function doSearch(){
   area.innerHTML=`<div class="search-loading"><div class="spinner"></div><span>유튜브에서 <strong>"${q}"</strong> 검색 중…</span></div>`;
   document.getElementById('search-btn').disabled=true;
 
-  // 🔴 중요: 여기에 구글 클라우드 콘솔에서 발급받은 유튜브 API 키를 넣어야 합니다.
   const API_KEY = 'AIzaSyDyEFH9Sg0HtNQP4wkN8pVw6qf3OeAix48'; 
 
-  if (API_KEY === 'YOUR_YOUTUBE_API_KEY_HERE') {
-    area.innerHTML=`<div class="search-error"><i class="ti ti-alert-triangle"></i><span>YouTube API 키가 입력되지 않았습니다. 소스 코드의 API_KEY 변수에 키를 넣어주세요.</span></div>`;
-    document.getElementById('search-btn').disabled=false;
-    return;
-  }
-
-  // 음악 카테고리(videoCategoryId=10)로 한정하여 검색
   const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=6&q=${encodeURIComponent(q)}&type=video&videoCategoryId=10&key=${API_KEY}`;
 
   try{
@@ -374,19 +374,17 @@ async function doSearch(){
     const data = await res.json();
     if(!data.items || !data.items.length) throw new Error('검색 결과가 없습니다. 다른 검색어를 시도해 보세요.');
 
-    // HTML 엔티티(&amp; 등)를 일반 문자로 변환하는 함수
     const decodeHtml = (html) => {
       const txt = document.createElement("textarea");
       txt.innerHTML = html;
       return txt.value;
     };
 
-    // 결과를 기존 코드 양식에 맞게 변환
     const results = data.items.map(item => ({
       videoId: item.id.videoId,
       title: decodeHtml(item.snippet.title),
       channel: decodeHtml(item.snippet.channelTitle),
-      artist: decodeHtml(item.snippet.channelTitle) // 유튜브 API는 아티스트명을 분리해주지 않으므로 채널명으로 갈음
+      artist: decodeHtml(item.snippet.channelTitle) 
     }));
 
     renderResults(results, q);
@@ -519,7 +517,7 @@ function updateAvg(){const a=calcAvg();document.getElementById('avg-num').textCo
 function resetAll(){
   _curVid=null;
   scores={play:5,vocal:5,mood:5,genre:5,originality:5};
-  ['yt-url','song-title','song-artist','song-genre'].forEach(id=>document.getElementById(id).value='');
+  ['yt-url','song-title','song-artist'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('yt-frame').innerHTML=`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text3);"><i class="ti ti-player-play" style="font-size:48px;opacity:.3"></i></div>`;
   document.getElementById('rate-panel').classList.remove('visible');
   document.getElementById('results-area').innerHTML='';
@@ -552,11 +550,11 @@ function submitRating(){
   const url=document.getElementById('yt-url').value.trim();
   const title=document.getElementById('song-title').value.trim();
   const artist=document.getElementById('song-artist').value.trim();
-  const genre=document.getElementById('song-genre').value.trim();
+  
   if(!url||!title||!artist){toast('⚠️ 유튜브 링크, 제목, 아티스트를 입력해 주세요.');return;}
   if(!extractId(url)){toast('⚠️ 올바른 유튜브 링크를 입력해 주세요.');return;}
   const ratings=loadRatings();
-  ratings.push({id:Date.now(),url,title,artist,genre:genre||'기타',scores:{...scores},avg:calcAvg(),date:new Date().toLocaleDateString('ko-KR')});
+  ratings.push({id:Date.now(),url,title,artist,scores:{...scores},avg:calcAvg(),date:new Date().toLocaleDateString('ko-KR')});
   saveRatings(ratings);toast('✅ 평가가 등록되었습니다!');resetAll();switchTab('rank');
 }
 
@@ -583,7 +581,6 @@ function renderRank(){
     <div class="rank-row${selectedRankId===r.id?' active':''}" onclick="selectRow(${r.id})">
       <div class="rank-n ${rc(i)}">${i+1}</div>
       <div><div class="rank-song">${r.title}</div><div class="rank-artist">${r.artist}</div></div>
-      <div style="text-align:center"><span class="genre-pill">${r.genre}</span></div>
       <div class="rank-score-cell"><div class="rank-score-n">${r.avg.toFixed(2)}</div><div class="rank-score-d">/ 10</div></div>
       <div class="rank-stars-cell">${renderStars(r.avg)}</div>
     </div>`).join('');
@@ -602,7 +599,7 @@ function renderDetail(r){
       <div class="detail-head">
         <div>
           <div class="detail-title">${r.title}</div>
-          <div class="detail-artist">${r.artist} · <span class="genre-pill">${r.genre}</span></div>
+          <div class="detail-artist">${r.artist}</div>
         </div>
         <div style="text-align:right">
           <div class="detail-score-big">${r.avg.toFixed(2)}</div>
